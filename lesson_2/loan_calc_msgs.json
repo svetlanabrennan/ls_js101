@@ -1,0 +1,12 @@
+{
+  "welcome": "Welcome to the Loan Calculator!", 
+  "loanAmount": "What is the loan amount in dollars?",
+  "invalidLoan": "Invalid loan amount. Try again!",
+  "annualApr": "What is the Annual Percentage Rate (APR)? \n Example: Enter 5 for 5%",
+  "invalidApr": "Invalid APR amount. Try again!",
+  "loanDuration": "What is the loan duration in months?",
+  "invalidDuration": "Invalid duration. Try again!",
+  "anotherCalc": "Would you like another calculation? (y/n)",
+  "invalidAnswer": "Invalid answer. Type \"y\" or \"n\".",
+  "thankYou": "Thank you for using the Loan Calculator!"
+}

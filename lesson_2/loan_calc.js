@@ -1,58 +1,72 @@
-// calculate monthly apr STOPPED HERE
-
-// ask for loan duration 
-// validate duration: enter as months or year?
-// save loan duration
-// calculate loan duration in months
-
-// refactor messages into .json file
 // run program through lint
-// should we return to user what they entered for amount, apr and duration?
-// should most code be extracted to functions
-
-// loan formula: let m = p * (j / (1 - Math.pow((1 + j),(-n))));
-// m = monthly payment
-// p = loan amount
-// j = monthly interest rate
-// n = loan duration in months
 
 const readline = require('readline-sync');
+const MESSAGES = require('./loan_calc_msgs.json');
 
 function prompt(message) {
   console.log(`=> ${message}`);
 }
 
 function invalidNumber(number) {
-  return number.trimStart() === "" || Number.isNaN(Number(number));
+  return number.trim() === "" ||
+         Number(number) === 0 ||
+         Number.isNaN(Number(number));
 }
 
-function zeroApr(number) {
-  return Number(number) === 0;
+function calculateMonthlyApr(apr) {
+  return (Number(apr) / 100) / 12;
+}
+
+function calcPayment(amount, monthApr, length) {
+  return Number(amount) * (monthApr /
+               (1 - Math.pow((1 + monthApr),(-Number(length)))));
 }
 
 // START PROGRAM
 
-prompt("Welcome to the Loan Calculator!");
+prompt(MESSAGES["welcome"]);
 
-prompt("What is the loan amount in dollars?");
-let amount = readline.question();
+while (true) {
+  prompt(MESSAGES["loanAmount"]);
+  let loanAmount = readline.question();
 
-while (invalidNumber(amount)) {  // false means it's a valid number
-  prompt("Invalid loan amount. Try again!");
-  amount = readline.question();
+  while (invalidNumber(loanAmount)) {  // false means it's a valid number
+    prompt(MESSAGES["invalidLoan"]);
+    loanAmount = readline.question();
+  }
+
+  prompt(MESSAGES["annualApr"]);
+  let annualApr = readline.question();
+
+  while (invalidNumber(annualApr)) {  // false means it's a valid number
+    prompt(MESSAGES["invalidApr"]);
+    annualApr = readline.question();
+  }
+
+  let monthlyApr = calculateMonthlyApr(annualApr);
+
+  prompt(MESSAGES["loanDuration"]);
+  let monthlyDuration = readline.question();
+
+  while (invalidNumber(monthlyDuration)) { // false means it's a valid number
+    prompt(MESSAGES["invalidDuration"]);
+    monthlyDuration = readline.question();
+  }
+
+  let monthlyPayment = calcPayment(loanAmount, monthlyApr, monthlyDuration);
+
+  prompt(`For a $${loanAmount} loan with a ${annualApr}% APR,
+  your monthly payment is $${Math.round(monthlyPayment)}.`);
+
+  prompt(MESSAGES["anotherCalc"]);
+  let answer = readline.question().toLowerCase();
+
+  while (answer[0] !== "n" && answer[0] !== "y") {
+    prompt(MESSAGES["invalidAnswer"]);
+    answer = readline.question().toLowerCase();
+  }
+
+  if (answer[0] === "n") break;
 }
 
-prompt("What is the Annual Percentage Rate (APR)? \n Example: Enter 5 for 5%");
-let annualApr = readline.question();
-
-while (invalidNumber(annualApr)) {  // false means it's a valid number
-  prompt("Invalid APR amount. Try again!");
-  annualApr = readline.question();
-}
-
-while (zeroApr(annualApr)) {
-  prompt("APR can't be zero. Try again!");
-  annualApr = readline.question();
-}
-
-prompt("What is the loan duration in months?");
+prompt(MESSAGES["thankYou"]);
