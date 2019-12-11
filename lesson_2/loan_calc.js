@@ -1,5 +1,3 @@
-// run program through lint
-
 const readline = require('readline-sync');
 const MESSAGES = require('./loan_calc_msgs.json');
 
