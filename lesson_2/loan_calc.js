@@ -26,7 +26,7 @@ function calcPayment(amount, monthApr, length) {
     return Number(amount) / Number(length);
   } else {
     return Number(amount) * monthApr /
-               (1 - Math.pow((1 + monthApr),(-Number(length))));
+                 (1 - Math.pow((1 + monthApr),(-Number(length))));
   }
 }
 
