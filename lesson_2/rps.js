@@ -9,7 +9,7 @@ const WIN_CONDITIONS = {
   spock:    ["scissors", "rock"]
 };
 
-let winningScore = 5;
+const WINNING_SCORE = 5;
 
 function prompt(message) {
   console.log(`=> ${message}`);
@@ -32,7 +32,7 @@ function displayChoices() {
 function invalidChoice(choice) {
   while (!VALID_CHOICES.includes(convertChoices(choice))) {
     prompt("That's not a valid choice. Try again");
-    choice = readline.question();
+    choice = readline.question().toLowerCase();
   }
   return choice;
 }
@@ -44,10 +44,11 @@ function convertChoices(input) {
     case "sc": return "scissors";
     case "li": return "lizard";
     case "sp": return "spock";
+    default: return "error";
   }
 }
 
-function displayCards(player, computer) {
+function displayHand(player, computer) {
   prompt(`You chose ${player}. Computer chose ${computer}.`);
 }
 
@@ -79,14 +80,14 @@ function displayScoreboard(scoreboard) {
 }
 
 function endMatch(scoreboard) {
-  return winningScore === scoreboard["player score"] ||
-  winningScore === scoreboard["computer score"];
+  return WINNING_SCORE === scoreboard["player score"] ||
+  WINNING_SCORE === scoreboard["computer score"];
 }
 
 function displayMatchWinner(scoreboard) {
-  if (scoreboard["player score"] === winningScore) {
+  if (scoreboard["player score"] === WINNING_SCORE) {
     prompt("You are the match winner!");
-  } else if (scoreboard["computer score"] === winningScore) {
+  } else if (scoreboard["computer score"] === WINNING_SCORE) {
     prompt("Computer is the match winner!");
   }
 }
@@ -99,7 +100,7 @@ function playAgain() {
     if (validAnswer(answer)) {
       break;
     } else {
-      prompt("Invalid answer. Please enter \"y\" or \"n\".");
+      prompt('Invalid answer. Please enter "y" or "n".');
       answer = readline.question().toLowerCase();
     }
   }
@@ -122,14 +123,14 @@ do {
 
   while (true) {
     displayChoices();
-    let choice = readline.question();
+    let choice = readline.question().toLowerCase();
     choice = invalidChoice(choice);
     let playerChoice = convertChoices(choice);
 
     let randomIndex = Math.floor(Math.random() * VALID_CHOICES.length);
     let computerChoice = VALID_CHOICES[randomIndex];
 
-    displayCards(playerChoice, computerChoice);
+    displayHand(playerChoice, computerChoice);
 
     let playerWon = determineWinner(playerChoice, computerChoice);
     let computerWon = determineWinner(computerChoice, playerChoice);
