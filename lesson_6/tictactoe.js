@@ -4,17 +4,52 @@ const INITIAL_MARKER = " ";
 const HUMAN_MARKER = "X";
 const COMPUTER_MARKER = "O";
 const WINNING_SCORE = 5;
+const FIRST_PLAYER = "choose"
+
+const WINNING_LINES = [
+  [1, 2, 3], [4, 5, 6], [7, 8, 9], // rows
+  [1, 4, 7], [2, 5, 8], [3, 6, 9], // columns
+  [1, 5, 9], [3, 5, 7]            // diagonals
+];
 
 function prompt(msg) {
   console.log(`=> ${msg}`);
 }
 
-// displays the bones of the board
+function displayWelcome() {
+  prompt("Welcome to Tic Tac Toe!");
+  prompt(`You are ${HUMAN_MARKER}. Computer is ${COMPUTER_MARKER}.`);
+  prompt(`First player to win ${WINNING_SCORE} rounds wins the game!`);
+}
+
+function choosePlayer() {
+  switch (FIRST_PLAYER) {
+    case "Player": return 1
+    case "Computer": return 2
+    case "choose": askForPlayer();
+  }
+}
+
+function askForPlayer() {
+  prompt("Who should go first? 1 => Player or 2 => Computer");
+  let answer = readline.question().trim();
+
+  while (true) {
+    if ((answer === "1") || (answer === "2")) break;
+    prompt("Invalid answer. Choose 1 => Player or 2 => Computer");
+    answer = readline.question().trim();
+  }
+  return answer;
+}
+
+function determinePlayer(player) {
+  switch (player) {
+    case 1: return "Player"
+    case 2: return "Computer"
+  }
+}
+
 function displayBoard(board) {
-  console.clear();
-
-  console.log(`You are ${HUMAN_MARKER}. Computer is ${COMPUTER_MARKER}.`)
-
   console.log("");
   console.log("     |     |");
   console.log(`  ${board["1"]}  |  ${board["2"]}  |  ${board["3"]}  `);
@@ -59,7 +94,15 @@ function joinOr(arr, delimiter = ", ", word = "or") {
   }
 }
 
-// player chooses a square
+// chooses which player plays next
+function currentPlayer(player, board) {
+  return (player === "Player") ? playerChoosesSquare(board) : computerChoosesSquare(board);
+}
+
+function switchPlayer(player) {
+  return (player === "Player") ? "Computer" : "Player";
+}
+
 function playerChoosesSquare(board) {
   let square;
 
@@ -68,18 +111,61 @@ function playerChoosesSquare(board) {
     square = readline.question().trim();
 
     if (emptySquares(board).includes(square)) break;
-
     prompt("Sorry, that's not a valid choice.");
   }
   board[square] = HUMAN_MARKER; 
 }
 
-// computer chooses a square
-function computerChoosesSquare(board) {
-  let randomIndex = Math.floor(Math.random() * emptySquares(board).length);
 
-  let square = emptySquares(board)[randomIndex];
+function computerChoosesSquare(board) {
+  let square;
+
+  for (let index = 0; index < WINNING_LINES.length; index++) {
+    let line = WINNING_LINES[index];
+    square = computerOffenseOrDefense(line, board, COMPUTER_MARKER);
+    if (square) break;
+  }
+
+  if (!square) {
+    for (let index = 0; index < WINNING_LINES.length; index++) {
+      let line = WINNING_LINES[index];
+      square = computerOffenseOrDefense(line, board, HUMAN_MARKER);
+      if (square) break;
+    }
+  }
+
+  if (!square) {
+    square = squareFiveEmpty(board);
+  }
+
+  if (!square) {
+    let randomIndex = randomSquare(board)
+    square = emptySquares(board)[randomIndex];
+  }
+
   board[square] = COMPUTER_MARKER; 
+}
+
+function squareFiveEmpty(board) {
+  return (board[5] === INITIAL_MARKER) ? 5 : false
+}
+
+// computer chooses random square
+function randomSquare(board) {
+  return Math.floor(Math.random() * emptySquares(board).length);
+}
+
+// computer ai
+function computerOffenseOrDefense(line, board, marker) {
+  let markersInLine = line.map(value => board[value]);
+
+  if (markersInLine.filter(value => value === marker).length === 2) {
+    let square = line.find(value => board[value] === INITIAL_MARKER);
+    if (square !== undefined) {
+      return square;
+    }
+  }
+    return null;
 }
 
 // determines if board is full or not
@@ -92,82 +178,113 @@ function someoneWon(board) {
   return !!detectWinner(board);
 }
 
-// compares board pieces and finds winner
+function markedLine(board) {
+  return WINNING_LINES.map(subArr => subArr.map(value => board[value]));
+}
+
+// finds winner of round
 function detectWinner(board) {
-  let winningLines = [
-    [1, 2, 3], [4, 5, 6], [7, 8, 9], // rows
-    [1, 4, 7], [2, 5, 8], [3, 6, 9], // columns
-    [1, 5, 9], [3, 5, 7]            // diagonals
-  ];
+  let lineMarker = markedLine(board);
 
-  for (let line = 0; line < winningLines.length; line++) {
-    let [sq1, sq2, sq3] = winningLines[line];
+  if (lineMarker.some(line => line.every(value => value === HUMAN_MARKER))) {
+    return "Player";
+  } else if (lineMarker.some(line => line.every(value => value === COMPUTER_MARKER))) {
+    return "Computer"
+  } else {
+    return null;
+  }
+}
 
-    if (
-       board[sq1] === HUMAN_MARKER &&
-       board[sq2] === HUMAN_MARKER && 
-       board[sq3] === HUMAN_MARKER
-    ) {
-      return "Player";
-    } else if (
-      board[sq1] === COMPUTER_MARKER &&
-      board[sq2] === COMPUTER_MARKER && 
-      board[sq3] === COMPUTER_MARKER
-    ) {
-      return "Computer";
+function displayWinner(board) {
+  if (someoneWon(board)) {
+    prompt(`${detectWinner(board)} won!`);
+  } else {
+    prompt("It's a tie!");
+  }
+}
+
+function updateScoreBoard(board, winner) {
+  if (winner === "Player") {
+    board[winner.toLowerCase()] += 1;
+  } else if (winner === "Computer") {
+    board[winner.toLowerCase()] += 1;
+  }
+}
+
+function displayScoreBoard(board) {
+  prompt(`Player score is: ${board.player}`);
+  prompt(`Computer score is: ${board.computer}`);
+}
+
+function endMatch(board) {
+  return WINNING_SCORE === board.player || WINNING_SCORE === board.player;
+}
+
+function displayMatchWinner(board) {
+  if (board.player === WINNING_SCORE) {
+    prompt("You are the match winner!");
+  } else if (board.computer === WINNING_SCORE) {
+    prompt("Computer is the match winner!");
+  }
+}
+
+function playAgain() {
+  prompt("Play again? (y or n)");
+  let answer = readline.question().toLowerCase()[0];
+
+  while (true) {
+    if (validAnswer(answer)) {
+      break;
+    } else {
+      prompt('Invalid answer. Please enter "y" or "n".');
+      answer = readline.question().toLowerCase()[0];
     }
   }
-  return null;
+  return answer;
 }
 
-function updateScoreBoard(scoreboard, winner) {
-  if (winner === "Player") {
-    scoreboard[winner.toLowerCase()] += 1;
-  } else if (winner === "Computer") {
-    scoreboard[winner.toLowerCae()] += 1;
-  }
+function validAnswer(input) {
+  return ["y", "Y", "n", "N"].includes(input[0])
 }
 
-function displayScoreBoard(scoreboard) {
-  prompt(`Player score is: ${scoreboard.player}`);
-  prompt(`Computer score is: ${scoreboard.computer}`);
-}
+// PROGRAM START
+let answer;
+displayWelcome();
+askForPlayer();
+let player = determinePlayer(choosePlayer);
 
-// loop starts
 while (true) {
-  let board = initializeBoard();
 
   let scoreboard = {
     player: 0,
     computer: 0
   }
 
-  while (true) {
+  do {
+    let board = initializeBoard();
+
+    while (true) {
+      displayBoard(board);
+      currentPlayer(player, board);
+      player = switchPlayer(player);
+      if (someoneWon(board) || boardFull(board)) break;
+      console.clear();
+    }
+
+    console.clear();
     displayBoard(board);
+    displayWinner(board);
 
-    playerChoosesSquare(board);
-    if (someoneWon(board) || boardFull(board)) break;
+    updateScoreBoard(scoreboard, detectWinner(board));
+    displayScoreBoard(scoreboard);
 
-    computerChoosesSquare(board);
-    if (someoneWon(board) || boardFull(board)) break;
-  }
+  } while ((scoreboard.player < WINNING_SCORE) && (scoreboard.computer < WINNING_SCORE));
 
-  displayBoard(board);
-
-  if (someoneWon(board)) {
-    prompt(`${detectWinner(board)} won!`);
-  } else {
-    prompt("It's a tie!");
-  }
-
-  updateScoreBoard(scoreboard, detectWinner(board));
-  displayScoreBoard(scoreboard);
-
-  prompt("Play again? (y or n)");
-  let answer = readline.question().toLowerCase()[0];
+  displayMatchWinner(scoreboard);
+  answer = playAgain();
   if (answer !== "y") break;
 }
 
-prompt("Thanks for playing Tic Tac Toe. Goodbye!")
+prompt("Thanks for playing Tic Tac Toe. Goodbye!");
 
-// stopped on KEEP SCORE
+// stopped at refactoring computer ai functions
