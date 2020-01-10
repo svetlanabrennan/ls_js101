@@ -19,6 +19,7 @@ function prompt(msg) {
 function displayWelcome() {
   prompt("Welcome to Tic Tac Toe!");
   prompt(`You are ${HUMAN_MARKER}. Computer is ${COMPUTER_MARKER}.`);
+  prompt("");
   prompt(`First player to win ${WINNING_SCORE} rounds wins the game!`);
 }
 
@@ -42,8 +43,8 @@ function askForPlayer() {
   return Number(answer);
 }
 
-function determinePlayer(player) {
-  switch (player) {
+function determinePlayer(input) {
+  switch (input) {
     case 1: return "Player";
     case 2: return "Computer";
   }
@@ -208,6 +209,7 @@ function updateScoreBoard(board, winner) {
 function displayScoreBoard(board) {
   prompt(`Player score is: ${board.player}`);
   prompt(`Computer score is: ${board.computer}`);
+  console.log("");
 }
 
 function displayMatchWinner(board) {
@@ -239,26 +241,25 @@ function validAnswer(input) {
 
 // PROGRAM START
 let answer;
+let currentPlayer;
 displayWelcome();
-//askForPlayer();
 
 while (true) {
 
   let scoreboard = { player: 0, computer: 0 };
-  let currentPlayer = determinePlayer(choosePlayer);
+  currentPlayer = determinePlayer(choosePlayer());
 
   do {
     let board = initializeBoard();
 
     while (true) {
-      displayBoard(board);
+      if (currentPlayer === "Player") {
+        displayBoard(board);
+      }
       currentPlayerPlays(currentPlayer, board);
       currentPlayer = switchPlayer(currentPlayer);
       if (someoneWon(board) || boardFull(board)) break;
-      console.clear();
     }
-
-    console.clear();
     displayBoard(board);
     displayWinner(board);
 
