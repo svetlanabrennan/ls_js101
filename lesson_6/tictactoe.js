@@ -23,14 +23,6 @@ function displayWelcome() {
   prompt(`First player to win ${WINNING_SCORE} rounds wins the game!`);
 }
 
-function choosePlayer() {
-  switch (FIRST_PLAYER) {
-    case "Player": return 1;
-    case "Computer": return 2;
-    case "choose": return askForPlayer();
-  }
-}
-
 function askForPlayer() {
   prompt("Who should go first? 1 => Player or 2 => Computer");
   let answer = readline.question().trim();
@@ -40,13 +32,21 @@ function askForPlayer() {
     prompt("Invalid answer. Choose 1 => Player or 2 => Computer");
     answer = readline.question().trim();
   }
-  return Number(answer);
+
+  if (answer === "1") {
+    return "Player";
+  } else {
+    return "Computer";
+  }
 }
 
-function determinePlayer(input) {
-  switch (input) {
-    case 1: return "Player";
-    case 2: return "Computer";
+function determineFirstPlayer() {
+  if (FIRST_PLAYER === "Player") {
+    return "Player";
+  } else if (FIRST_PLAYER === "Computer") {
+    return "Computer";
+  } else {
+    return askForPlayer();
   }
 }
 
@@ -220,6 +220,11 @@ function displayMatchWinner(board) {
   }
 }
 
+function continueMatch(score) {
+  return (score.player < WINNING_SCORE) &&
+      (score.computer < WINNING_SCORE);
+}
+
 function playAgain() {
   prompt("Play again? (y or n)");
   let answer = readline.question().toLowerCase()[0];
@@ -247,7 +252,7 @@ displayWelcome();
 while (true) {
 
   let scoreboard = { player: 0, computer: 0 };
-  currentPlayer = determinePlayer(choosePlayer());
+  currentPlayer = determineFirstPlayer();
 
   do {
     let board = initializeBoard();
@@ -266,8 +271,7 @@ while (true) {
     updateScoreBoard(scoreboard, detectWinner(board));
     displayScoreBoard(scoreboard);
 
-  } while ((scoreboard.player < WINNING_SCORE) &&
-      (scoreboard.computer < WINNING_SCORE));
+  } while (continueMatch(scoreboard));
 
   displayMatchWinner(scoreboard);
   answer = playAgain();
