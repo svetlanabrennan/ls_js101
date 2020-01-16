@@ -2,6 +2,7 @@ let readline = require("readline-sync");
 
 const WINNING_VALUE = 21;
 const DEALER_MIN_VALUE = 17;
+const MATCH_ROUNDS = 5;
 const SUITS = ["Hearts", "Diamonds", "Clubs", "Spades"];
 const VALUES = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"];
 const NUM_VALUES = {
@@ -22,6 +23,12 @@ const NUM_VALUES = {
 
 function prompt(msg) {
   console.log(`=> ${msg}`);
+}
+
+function welcomeMsg(){
+  prompt("Welcome to Twenty-One!");
+  prompt("First person to win 5 rounds wins the match!");
+  console.log("");
 }
 
 // combines suits and values
@@ -47,23 +54,12 @@ function selectRandomCard(deck) {
   return deck.pop();
 }
 
-// function selectRandomCard(deck) {
-//   return [deck.pop(), deck.pop()];
-// }
-
 function dealCards(hand, deck) {
   let selectedCard;
   selectedCard = selectRandomCard(deck);
   hand.push(selectedCard);
   return hand;
 }
-
-// function drawCards(player, dealer, deck) {
-//   dealCards(player, deck);
-//   dealCards(player, deck);
-//   dealCards(dealer, deck);
-//   dealCards(dealer, deck);
-// }
 
 function drawTwoCards(cards, deck) {
   for (let count = 1; count < 3; count += 1) {
@@ -81,11 +77,6 @@ function displayInitialHands(dealerHand, playerHand) {
   prompt(`You have: ${displayCardName(playerHand[0])} and ${displayCardName(playerHand[1])}`);
 }
 
-// function displayInitialHands() {
-//   prompt(`Dealer has: ${dealerCards[0]} and unknown card`);
-//   prompt(`You have: ${playerCards[0]} and ${playerCards[1]}`);
-// }
-
 // get hand total value
 function calculateHandValue(hand) {
   let total = hand.reduce((sum, card) => {
@@ -96,24 +87,12 @@ function calculateHandValue(hand) {
   return total;
 }
 
-// need to check if this function adjusts multiple aces
-function adjustForAce(hand, total) {
-  hand.filter(card => {
-    if ((card.value === "Ace") && (total > 21)) {
-      total -= 10;
-    }
-  });
-  return total;
-}
-
-
 function adjustForAce(hand, total) {
   hand.filter(card => card.value === "Ace").forEach(_ => {
     if (total > 21) total -= 10;
   });
   return total;
 }
-
 
 function displayPlayerHandValue(total) {
   prompt(`Your hand value is ${total}`);
@@ -135,15 +114,18 @@ function askPlayerHitStay() {
   return hitStayAnswer;
 }
 
-function displayHand(hand) {
+function displayPlayerHand(hand) {
   let result = hand.map(card => {
     return displayCardName(card);
   });
-  if (hand === playerCards) {
-    console.log(`Your have: ${result.join(", ")}`);
-  } else {
+  console.log(`Your have: ${result.join(", ")}`);
+}
+
+function displayDealerHand(hand) {
+  let result = hand.map(card => {
+    return displayCardName(card);
+  });
     console.log(`Dealer has: ${result.join(", ")}`);
-  }
 }
 
 function playersTurn(cards, total, deck) {
@@ -156,10 +138,10 @@ function playersTurn(cards, total, deck) {
       break; // if stay
     }
     console.log("");
-
     dealCards(cards, deck); // hit function
-    displayHand(cards); // display hand
-    total = calculateHandValue(cards);
+    displayPlayerHand(cards); // display hand
+
+    total = calculateHandValue(cards); // calculate total
     displayPlayerHandValue(total); // show total
     console.log("");
 
@@ -170,14 +152,13 @@ function playersTurn(cards, total, deck) {
 
 function dealersTurn(cards, total, deck) {
   while (true) {
-    console.log(`dealers total value is ${total}`);
     if (busted(total) || dealerMetMinValue(total)) { // PROBLEM HERE: CAN'T DETECT MIN VALUE
-      break; 
+      break;
     }
     prompt("Dealer is hitting...");
     console.log("");
     dealCards(cards, deck); // dealer hits
-    displayHand(cards); // display hand
+    displayDealerHand(cards); // display hand
     total = calculateHandValue(cards);
     displayDealerHandValue(total); // show total
   }
@@ -190,6 +171,21 @@ function busted(total) {
 
 function dealerMetMinValue(total) {
   return total >= DEALER_MIN_VALUE;
+}
+
+function displayDealersMove(player, dealer) {
+  if (busted(dealer)) {
+    prompt("Dealer busted.");
+    console.log("");
+
+  } else if (dealerMetMinValue(dealer)) {
+    prompt("Dealer stays.");
+    console.log("");
+
+    displayPlayerHandValue(player);
+    displayDealerHandValue(dealer);
+    console.log("");
+  }
 }
 
 function calculateFinalScore(playerScore, dealerScore) {
@@ -239,6 +235,8 @@ function playAgain(input) {
 // PROGRAM START
 let playerCards;
 let dealerCards;
+//let scoreboard = { player: 0, dealer: 0 };
+welcomeMsg();
 
 do {
   let fullDeck = shuffle(initializeDeck());
@@ -249,18 +247,14 @@ do {
   let dealerTotal = 0;
 
   // deals two cards to player and dealer
-  //drawCards(playerCards, dealerCards, fullDeck);
-
   playerCards = drawTwoCards(playerCards, fullDeck);
   dealerCards = drawTwoCards(dealerCards, fullDeck);
-
-  console.log(playerCards);
-  console.log(dealerCards);
 
   // shows the first two cards dealt (hiding dealer's 2nd card)
   displayInitialHands(dealerCards, playerCards);
 
   playerTotal = calculateHandValue(playerCards);
+  dealerTotal = calculateHandValue(dealerCards);
   console.log("");
 
   // show player total hand value
@@ -275,22 +269,10 @@ do {
   } else {
     // dealer turn
     dealerTotal = dealersTurn(dealerCards, dealerTotal, fullDeck);
+    displayDealersMove(playerTotal, dealerTotal);
   }
 
-  if (busted(dealerTotal)) {
-    prompt("Dealer busted.");
-    console.log("");
-
-  } else if (dealerMetMinValue(dealerTotal)) {
-    prompt("Dealer stays.");
-    console.log("");
-
-    displayPlayerHandValue(playerTotal);
-    displayDealerHandValue(dealerTotal);
-    console.log("");
-  }
-
-  displayWinner(calculateFinalScore(playerTotal, dealerTotal));
+    displayWinner(calculateFinalScore(playerTotal, dealerTotal));
 
 } while (playAgain(askPlayAgain()));
 
