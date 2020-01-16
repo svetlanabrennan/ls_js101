@@ -25,13 +25,12 @@ function prompt(msg) {
   console.log(`=> ${msg}`);
 }
 
-function welcomeMsg(){
+function welcomeMsg() {
   prompt("Welcome to Twenty-One!");
   prompt("First person to win 5 rounds wins the match!");
   console.log("");
 }
 
-// combines suits and values
 function initializeDeck() {
   let deck = [];
   VALUES.forEach(value => {
@@ -44,8 +43,8 @@ function initializeDeck() {
 
 function shuffle(deck) {
   for (let index = deck.length - 1; index > 0; index--) {
-    let otherIndex = Math.floor(Math.random() * (index + 1)); // 0 to index
-    [deck[index], deck[otherIndex]] = [deck[otherIndex], deck[index]]; // swap elements
+    let otherIndex = Math.floor(Math.random() * (index + 1));
+    [deck[index], deck[otherIndex]] = [deck[otherIndex], deck[index]];
   }
   return deck;
 }
@@ -77,12 +76,10 @@ function displayInitialHands(dealerHand, playerHand) {
   prompt(`You have: ${displayCardName(playerHand[0])} and ${displayCardName(playerHand[1])}`);
 }
 
-// get hand total value
 function calculateHandValue(hand) {
   let total = hand.reduce((sum, card) => {
     return sum + NUM_VALUES[card.value];
   }, 0);
-  // call function to adjust for ace
   total = adjustForAce(hand, total);
   return total;
 }
@@ -104,9 +101,9 @@ function displayDealerHandValue(total) {
 
 function askPlayerHitStay() {
   let hitStayAnswer;
+  prompt("Would you like to hit or stay? 1 => hit or 2 => stay");
+  hitStayAnswer = readline.question().trim();
   while (true) {
-    prompt("Would you like to hit or stay? 1 => hit or 2 => stay");
-    hitStayAnswer = readline.question().trim();
     if (["1", "2"].includes(hitStayAnswer)) break;
     prompt("Invalid answer. Press 1 => hit or 2 => stay.");
     hitStayAnswer = readline.question().trim();
@@ -125,24 +122,24 @@ function displayDealerHand(hand) {
   let result = hand.map(card => {
     return displayCardName(card);
   });
-    console.log(`Dealer has: ${result.join(", ")}`);
+  console.log(`Dealer has: ${result.join(", ")}`);
 }
 
 function playersTurn(cards, total, deck) {
   let answer;
   while (true) {
-    answer = askPlayerHitStay(); // ask if they want to hit or stay
+    answer = askPlayerHitStay();
 
     if (answer === "2") {
       prompt("You chose to stay!");
-      break; // if stay
+      break;
     }
     console.log("");
-    dealCards(cards, deck); // hit function
-    displayPlayerHand(cards); // display hand
+    dealCards(cards, deck);
+    displayPlayerHand(cards);
 
-    total = calculateHandValue(cards); // calculate total
-    displayPlayerHandValue(total); // show total
+    total = calculateHandValue(cards);
+    displayPlayerHandValue(total);
     console.log("");
 
     if (busted(total)) break;
@@ -152,15 +149,16 @@ function playersTurn(cards, total, deck) {
 
 function dealersTurn(cards, total, deck) {
   while (true) {
-    if (busted(total) || dealerMetMinValue(total)) { // PROBLEM HERE: CAN'T DETECT MIN VALUE
+    if (busted(total) || dealerMetMinValue(total)) {
       break;
     }
     prompt("Dealer is hitting...");
     console.log("");
-    dealCards(cards, deck); // dealer hits
-    displayDealerHand(cards); // display hand
+
+    dealCards(cards, deck);
+    displayDealerHand(cards);
     total = calculateHandValue(cards);
-    displayDealerHandValue(total); // show total
+    displayDealerHandValue(total);
   }
   return total;
 }
@@ -199,17 +197,47 @@ function calculateFinalScore(playerScore, dealerScore) {
     !busted(dealerScore)) {
     return "Tie";
   } else {
-    return "Error";
+    return null;
   }
 }
 
 function displayWinner(winner) {
   if (winner === "Player") {
     prompt("You win!");
+    console.log("");
   } else if (winner === "Dealer") {
     prompt("Dealer wins!");
+    console.log("");
   } else {
     prompt("It's a tie!");
+    console.log("");
+  }
+}
+
+function updateScoreboard(board, winner) {
+  if (winner === "Player") {
+    board[winner.toLowerCase()] += 1;
+  } else if (winner === "Dealer") {
+    board[winner.toLowerCase()] += 1;
+  }
+}
+
+function continueMatch(board) {
+  return (board.player < MATCH_ROUNDS) &&
+    (board.dealer < MATCH_ROUNDS);
+}
+
+function displayScoreboard(board) {
+  prompt(`Player score is: ${board.player}`);
+  prompt(`Dealer score is: ${board.dealer}`);
+  console.log("");
+}
+
+function displayMatchWinner(board) {
+  if (board.player === MATCH_ROUNDS) {
+    prompt("You are the match winner!");
+  } else if (board.dealer === MATCH_ROUNDS) {
+    prompt("Dealer is the match winner!");
   }
 }
 
@@ -235,44 +263,46 @@ function playAgain(input) {
 // PROGRAM START
 let playerCards;
 let dealerCards;
-//let scoreboard = { player: 0, dealer: 0 };
+let winner;
 welcomeMsg();
 
 do {
-  let fullDeck = shuffle(initializeDeck());
-  playerCards = [];
-  dealerCards = [];
+    let scoreboard = { player: 0, dealer: 0 };
 
-  let playerTotal = 0;
-  let dealerTotal = 0;
+    while (continueMatch(scoreboard)) {
+      let fullDeck = shuffle(initializeDeck());
+      playerCards = [];
+      dealerCards = [];
 
-  // deals two cards to player and dealer
-  playerCards = drawTwoCards(playerCards, fullDeck);
-  dealerCards = drawTwoCards(dealerCards, fullDeck);
+      let playerTotal = 0;
+      let dealerTotal = 0;
 
-  // shows the first two cards dealt (hiding dealer's 2nd card)
-  displayInitialHands(dealerCards, playerCards);
+      playerCards = drawTwoCards(playerCards, fullDeck);
+      dealerCards = drawTwoCards(dealerCards, fullDeck);
 
-  playerTotal = calculateHandValue(playerCards);
-  dealerTotal = calculateHandValue(dealerCards);
-  console.log("");
+      displayInitialHands(dealerCards, playerCards);
 
-  // show player total hand value
-  displayPlayerHandValue(playerTotal);
+      playerTotal = calculateHandValue(playerCards);
+      dealerTotal = calculateHandValue(dealerCards);
+      console.log("");
 
-  // player turn
-  playerTotal = playersTurn(playerCards, playerTotal, fullDeck);
+      displayPlayerHandValue(playerTotal);
+      playerTotal = playersTurn(playerCards, playerTotal, fullDeck);
 
-  // player busts so deals turn
-  if (busted(playerTotal)) {
-    prompt("You busted.");
-  } else {
-    // dealer turn
-    dealerTotal = dealersTurn(dealerCards, dealerTotal, fullDeck);
-    displayDealersMove(playerTotal, dealerTotal);
-  }
+      if (busted(playerTotal)) {
+        prompt("You busted.");
+      } else {
+        dealerTotal = dealersTurn(dealerCards, dealerTotal, fullDeck);
+        displayDealersMove(playerTotal, dealerTotal);
+      }
 
-    displayWinner(calculateFinalScore(playerTotal, dealerTotal));
+      winner = calculateFinalScore(playerTotal, dealerTotal);
+      displayWinner(winner);
+      updateScoreboard(scoreboard, winner);
+    }
+
+  displayScoreboard(scoreboard);
+  displayMatchWinner(scoreboard);
 
 } while (playAgain(askPlayAgain()));
 
