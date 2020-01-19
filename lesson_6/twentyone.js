@@ -49,13 +49,13 @@ function shuffle(deck) {
   return deck;
 }
 
-function selectRandomCard(deck) {
+function removeOneCard(deck) {
   return deck.pop();
 }
 
 function dealCards(hand, deck) {
   let selectedCard;
-  selectedCard = selectRandomCard(deck);
+  selectedCard = removeOneCard(deck);
   hand.push(selectedCard);
   return hand;
 }
@@ -101,12 +101,12 @@ function displayDealerHandValue(total) {
 
 function askPlayerHitStay() {
   let hitStayAnswer;
-  prompt("Would you like to hit or stay? 1 => hit or 2 => stay");
-  hitStayAnswer = readline.question().trim();
+  prompt("Would you like to hit or stay? 'h' => hit or 's' => stay");
+  hitStayAnswer = readline.question().trim().toLowerCase();
   while (true) {
-    if (["1", "2"].includes(hitStayAnswer)) break;
-    prompt("Invalid answer. Press 1 => hit or 2 => stay.");
-    hitStayAnswer = readline.question().trim();
+    if (["h", "s", "hit", "stay"].includes(hitStayAnswer)) break;
+    prompt("Invalid answer. Press 'h' => hit or 's' => stay.");
+    hitStayAnswer = readline.question().trim().toLowerCase();
   }
   return hitStayAnswer;
 }
@@ -130,7 +130,7 @@ function playersTurn(cards, total, deck) {
   while (true) {
     answer = askPlayerHitStay();
 
-    if (answer === "2") {
+    if (answer === "s" || answer ==="stay") {
       prompt("You chose to stay!");
       break;
     }
@@ -186,7 +186,7 @@ function displayDealersMove(player, dealer) {
   }
 }
 
-function calculateFinalScore(playerScore, dealerScore) {
+function determineWinner(playerScore, dealerScore) {
   if (((playerScore > dealerScore) && (!busted(playerScore))) ||
     busted(dealerScore)) {
     return "Player";
@@ -296,7 +296,7 @@ do {
         displayDealersMove(playerTotal, dealerTotal);
       }
 
-      winner = calculateFinalScore(playerTotal, dealerTotal);
+      winner = determineWinner(playerTotal, dealerTotal);
       displayWinner(winner);
       updateScoreboard(scoreboard, winner);
     }
